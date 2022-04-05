@@ -9,7 +9,7 @@ print(iter)
 
 
 parameter_grid <- expand.grid(
-  seed = 1:1200,
+  seed = 1:1000,
   sample_size = c(1000),
   skew = c('low', 'medium', 'high')
 )
@@ -132,13 +132,13 @@ lam_candidate <- c(0.00001, 0.000025, 0.00005, 0.000075, 0.0001, 0.00025, 0.0005
 lam <- lam_candidate[lam_candidate <= max_y/10000]
 
 # fit a two-stage huber loss-based superlearner for outcome regression outside of drtmle
-huber_sl_fit <- twostageSL.HUBER(Y = data$y, 
-                                 X = data[,-c(1,12)], 
-                                 library.2stage =list(stage1=stage_1.library,
-                                                      stage2=stage_2.library),
-                                 library.1stage = SL.library,
-                                 lambda = lam,
-                                 cvControl = list(V = 5))
+huber_sl_fit <- HuberSL(Y = data$y, 
+                        X = data[,-c(1,12)], 
+                        library.2stage =list(stage1=stage_1.library,
+                                             stage2=stage_2.library),
+                        library.1stage = SL.library,
+                        lambda = lam,
+                        cvControl = list(V = 10))
 
 # One-stage huber loss-based super learner with partial-CV
 # predicted values setting w1 = 1
@@ -146,14 +146,11 @@ pred_1.partial <- predict.onestage.huber_SL.partial_CV(huber_sl_fit, newdata = d
 # predicted values setting w1 = 0
 pred_0.partial <- predict.onestage.huber_SL.partial_CV(huber_sl_fit, newdata = data.frame(A = 0, data[,-c(1,2,12)]))
 
-
 # One-stage huber loss-based super learner with nested-CV
 # predicted values setting w1 = 1
 pred_1.nested <- predict.onestage.huber_SL.nested_CV(huber_sl_fit, newdata = data.frame(A = 1, data[,-c(1,2,12)]))
 # predicted values setting w1 = 0
 pred_0.nested <- predict.onestage.huber_SL.nested_CV(huber_sl_fit, newdata = data.frame(A = 0, data[,-c(1,2,12)]))
-
-
 
 # generate Qn list
 Qn10.partial <- list(
@@ -163,7 +160,6 @@ Qn10.partial <- list(
   pred_0.partial$pred
 )
 
-
 # generate Qn list
 Qn10.nested <- list(
   # first entry is predicted values setting w1 = 1
@@ -172,22 +168,20 @@ Qn10.nested <- list(
   pred_0.nested$pred
 )
 
-
 # pass this list to drtmle to avoid internal estimation of 
 # outcome regression (note propensity score and reduced-dimension
 # regressions are still estimated internally)
 
 huber_fit.partial <- drtmle(W = data[,-c(1,2,12)], 
-                           A = data$A, 
-                           Y = data$y, 
-                           family = gaussian(),
-                           Qn = Qn10.partial, # Only change this argument
-                           glm_g = ".", 
-                           glm_Qr = "gn", 
-                           glm_gr = "Qn", 
-                           # crucial to set a_0 to match Qn's construction!
-                           a_0 = c(1,0))
-
+                            A = data$A, 
+                            Y = data$y, 
+                            family = gaussian(),
+                            Qn = Qn10.partial, # Only change this argument
+                            glm_g = ".", 
+                            glm_Qr = "gn", 
+                            glm_gr = "Qn", 
+                            # crucial to set a_0 to match Qn's construction!
+                            a_0 = c(1,0))
 
 huber_fit.nested <- drtmle(W = data[,-c(1,2,12)], 
                            A = data$A, 
@@ -237,11 +231,3 @@ results <- c(
 save(results, file=paste0("/projects/dbenkes/ziyue/topic_2/ate/results/result_n=",parameter_grid$sample_size[i],
                          "_outlier=",parameter_grid$skew[i],
                          "_seed=", parameter_grid$seed[i],".RData"))
-
-# save(results, file=paste0("~/Desktop/project 4/result_n=",parameter_grid$sample_size[iter],
-#                           "_seed=", parameter_grid$seed[iter],".RData"))
-
-
-
-# clear the workspace
-cleaner()
