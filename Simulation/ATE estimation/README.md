@@ -1,4 +1,4 @@
-__README for simulation code__
+__README for code used in Monte Carlo simulation about ATE estimation__
 
 
 
