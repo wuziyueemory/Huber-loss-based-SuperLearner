@@ -27,17 +27,19 @@ parameter_grid <- expand.grid(
   library(glmnet)
   
   # source in functions 
-  source("/Users/ziyuewu//Desktop/project 2/simulation_2/simulation_code.R")
+  source("/projects/dbenkes/ziyue/topic_2/cost_prediction/createData.R")
+  source("/projects/dbenkes/ziyue/topic_2/cost_prediction/Estimators.R")
+  source("/projects/dbenkes/ziyue/topic_2/cost_prediction/twostage.HuberSL.R")
 
   # create candidate values for robustification parameter lambda
   lam <- c(0.00001, 0.000025, 0.00005, 0.000075, 0.0001, 0.00025, 0.0005, 0.00075, 0.001, 
            0.0025, 0.005, 0.0075, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 2.5, 
            5, 7.5, 10, 25, 50, 75, 100)
+
   lamname <- paste('lambda =',10000*lam)
   
   # do your simulation for row iter of parameter_grid
   # make training & testing data based on parameter_grid[iter, ]
-  for (iter in 1161:1170){
   train <- createData(n = parameter_grid$sample_size[iter],
                       skew = parameter_grid$skew[iter]
   )
@@ -46,6 +48,7 @@ parameter_grid <- expand.grid(
                      skew = parameter_grid$skew[iter]
   )
   
+
   prop_train <- mean(train$y >= quantile(train$y,probs = c(0.75)) + 
                        1.5*(quantile(train$y,probs = c(0.75))-quantile(train$y,probs = c(0.25))))*100
   
@@ -174,4 +177,3 @@ parameter_grid <- expand.grid(
   save(Rsq, file=paste0("/Users/ziyuewu//Desktop/project 2/simulation_2/Rsq_n=",parameter_grid$sample_size[iter],
                         "_skew=",parameter_grid$skew[iter],
                         "_seed=", parameter_grid$seed[iter],".RData"))
-}
