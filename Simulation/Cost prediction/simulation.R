@@ -153,6 +153,6 @@ parameter_grid <- expand.grid(
                         "_skew=",parameter_grid$skew[iter],
                         "_seed=", parameter_grid$seed[iter],".RData"))
 
-  save(Rsq, file=paste0("/projects/dbenkes/ziyue/topic_2/ate/results/Rsq_n=",parameter_grid$sample_size[iter],
+  save(Rsq, file=paste0("/projects/dbenkes/ziyue/topic_2/cost/results/Rsq_n=",parameter_grid$sample_size[iter],
                         "_skew=",parameter_grid$skew[iter],
                         "_seed=", parameter_grid$seed[iter],".RData"))
