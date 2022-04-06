@@ -1,4 +1,4 @@
-__README for MEPS data analysis code__
+__README for MEPS data analysis__
 
 # Overview 
 In this folder we includes codes for conducting real data analysis with data from the Medical Expenditure Panel Survey (MEPS).
