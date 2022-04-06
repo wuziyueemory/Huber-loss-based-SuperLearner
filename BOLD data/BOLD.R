@@ -17,7 +17,7 @@ library(cplm)
 
 # source functions 
 source("/projects/dbenkes/ziyue/topic_2/BOLD/SL_estimators.R")
-source("/projects/dbenkes/ziyue/topic_2/BOLD/HuberSL.R")
+source("/projects/dbenkes/ziyue/topic_2/BOLD/onestage_HuberSL.R")
 
 # load dataset
 train <- read.csv("/projects/dbenkes/ziyue/topic_2/BOLD/train.csv")
