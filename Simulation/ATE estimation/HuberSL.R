@@ -929,7 +929,7 @@ HuberSL <- function(Y, X, newX = NULL, library.2stage, library.1stage, lambda,
     
     ## Inner CV (fold = D): create a new cross-validation
     # D-fold cross-validation on training set
-    D <- 5 # number of folds
+    D <- 10 # number of folds
     tempN <- length(nest.Outcome)
     tempid <- seq(1,tempN,1)
     temp.Weights <- rep(1,tempN)
