@@ -17,7 +17,7 @@ systems. To read more about this work flow see
 
 This folder includes the training dataset `train.csv` which contains data from BOLD (served
 as both training and validation set through 10-fold cross-validation), R script for BOLD data analysis `BOLD.R`, 
-functions for Huber loss-based super learner `HuberSL.R`, functions 
+functions for one-stage Huber loss-based super learner `onestage_HuberSL.R`, functions 
 for candidate algorithms in super learner library `SL_estimators.R` and shell script for executing 
 BOLD data analysis R scripts `BOLD.sh`.
 
