@@ -41,12 +41,6 @@ prop_train <- mean(train$TOTEXP >= quantile(train$TOTEXP,probs = c(0.75)) +
                      1.5*(quantile(train$TOTEXP,probs = c(0.75))-quantile(train$TOTEXP,probs = c(0.25))))*100
 
 # Generate empty matirx to store predictions
-discrete.LS.two <- rep(NA, nrow(train))
-discrete.HUBER.two.partial <- rep(NA, nrow(train))
-discrete.HUBER.two.nested <- rep(NA, nrow(train))
-SL.LS.two <- rep(NA, nrow(train))
-SL.HUBER.two.partial <- rep(NA, nrow(train))
-SL.HUBER.two.nested <- rep(NA, nrow(train))
 discrete.LS.one <- rep(NA, nrow(train))
 discrete.HUBER.one.partial <- rep(NA, nrow(train))
 discrete.HUBER.one.nested <- rep(NA, nrow(train))
@@ -62,34 +56,17 @@ for (i in 1:K){
   test_temp <- train[flags,]
   
   # fit Huber loss-based super learner
-  bold.fit <- HuberSL(Y = train_temp$TOTEXP, 
-                          X = train_temp[,-c(1,21)], 
-                          newX = test_temp[,-c(1,21)],
-                          library.2stage = list(stage1=c("SL.glm","SL.glmnet","SL.knn", "SL.randomForest"),
-                                                stage2=c("SL.logOLS.smear", "SL.gammaLogGLM","SL.glmnet", "SL.randomForest")),
-                          library.1stage = c("SL.lm", "SL.glmnet", "SL.svm", "SL.randomForest"),
-                          lambda = lam,
-                          cvControl = list(V = 10))
+  bold.fit <- onestage.HuberSL(Y = train_temp$total_RVU_12moafter, 
+                               X = train_temp[,-c(1,21)], 
+                               newX = test_temp[,-c(1,21)],
+                               SL.library = c("SL.lm","SL.glmnet","SL.gammaIdentityGLM","SL.logOLS.smear","SL.gammaLogGLM",
+                                              "SL.svm","SL.randomForest", "SL.xgboost"),
+                               lambda = lam,
+                               cvControl = list(V = 10))
 
 ###################################################################################
 # Obtain predictions 
 ###################################################################################
-  
-  # Two-stage
-  # Discrete learner (MSE vs. HUBER)
-  discrete.LS.two[flags] <- bold.fit$SL.predict$`two-stage discrete learner`$'Standard (MSE)'
-  # partial-CV
-  discrete.HUBER.two.partial[flags] <- bold.fit$SL.predict$`two-stage discrete learner`$'Huber-partial CV'
-  # nested-CV
-  discrete.HUBER.two.nested[flags] <- bold.fit$SL.predict$`two-stage discrete learner`$'Huber-nested CV'
-  
-  # Super Learner (MSE vs. HUBER)
-  SL.LS.two[flags] <- bold.fit$SL.predict$`two-stage super learner`$'Standard (MSE)'
-  # partial-CV
-  SL.HUBER.two.partial[flags] <- bold.fit$SL.predict$`two-stage super learner`$'Huber-partial CV'
-  # nested-CV
-  SL.HUBER.two.nested[flags] <- bold.fit$SL.predict$`two-stage super learner`$'Huber-nested CV'
-  
   # One-stage
   # Discrete learner (MSE vs. HUBER)
   discrete.LS.one[flags] <- bold.fit$SL.predict$`one-stage discrete learner`$'Standard (MSE)'
@@ -112,15 +89,7 @@ for (i in 1:K){
 ###################################################################################
 
   # MSE
-  mse <- c(mean((test$total_RVU_12moafter - discrete.LS.two)^2),
-           mean((test$total_RVU_12moafter - discrete.HUBER.two.partial)^2),
-           mean((test$total_RVU_12moafter - discrete.HUBER.two.nested)^2),
-           
-           mean((test$total_RVU_12moafter - SL.LS.two)^2),
-           mean((test$total_RVU_12moafter - SL.HUBER.two.partial)^2),
-           mean((test$total_RVU_12moafter - SL.HUBER.two.nested)^2),
-           
-           mean((test$total_RVU_12moafter - discrete.LS.one)^2),
+  mse <- c(mean((test$total_RVU_12moafter - discrete.LS.one)^2),
            mean((test$total_RVU_12moafter - discrete.HUBER.one.partial)^2),
            mean((test$total_RVU_12moafter - discrete.HUBER.one.nested)^2),
            
@@ -129,15 +98,7 @@ for (i in 1:K){
            mean((test$total_RVU_12moafter - SL.HUBER.one.nested)^2))
   
   # MAE
-  mae <- c(mean(abs(test$total_RVU_12moafter - discrete.LS.two)),
-           mean(abs(test$total_RVU_12moafter - discrete.HUBER.two.partial)),
-           mean(abs(test$total_RVU_12moafter - discrete.HUBER.two.nested)),
-           
-           mean(abs(test$total_RVU_12moafter - SL.LS.two)),
-           mean(abs(test$total_RVU_12moafter - SL.HUBER.two.partial)),
-           mean(abs(test$total_RVU_12moafter - SL.HUBER.two.nested)),
-           
-           mean(abs(test$total_RVU_12moafter - discrete.LS.one)),
+  mae <- c(mean(abs(test$total_RVU_12moafter - discrete.LS.one)),
            mean(abs(test$total_RVU_12moafter - discrete.HUBER.one.partial)),
            mean(abs(test$total_RVU_12moafter - discrete.HUBER.one.nested)),
            
@@ -145,7 +106,8 @@ for (i in 1:K){
            mean(abs(test$total_RVU_12moafter - SL.HUBER.one.partial)),
            mean(abs(test$total_RVU_12moafter - SL.HUBER.one.nested))
          )
-  # R sqaure
+  
+# R sqaure
   Rsq <-  1 - mse/(var(test$total_RVU_12moafter))
   
   mse <- c(prop_train, mse)
