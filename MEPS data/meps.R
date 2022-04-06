@@ -52,7 +52,7 @@ prop_test <- mean(test$TOTEXP >= quantile(test$TOTEXP,probs = c(0.75)) +
 
 
 # fit two-stage superlearner with different loss function    
-twostage.fit <- HuberSL(Y = train$TOTEXP, 
+meps.fit <- HuberSL(Y = train$TOTEXP, 
                         X = train[,-c(1,21)], 
                         newX = test[,-c(1,21)],
                         library.2stage = list(stage1=c("SL.glm","SL.glmnet","SL.knn", "SL.randomForest"),
@@ -67,33 +67,33 @@ twostage.fit <- HuberSL(Y = train$TOTEXP,
   
   # Two-stage
   # Discrete learner (MSE vs. HUBER)
-  discrete.LS.two <- cost.fit$SL.predict$`two-stage discrete learner`$'Standard (MSE)'
+  discrete.LS.two <- meps.fit$SL.predict$`two-stage discrete learner`$'Standard (MSE)'
   # partial-CV
-  discrete.HUBER.two.partial <- cost.fit$SL.predict$`two-stage discrete learner`$'Huber-partial CV'
+  discrete.HUBER.two.partial <- meps.fit$SL.predict$`two-stage discrete learner`$'Huber-partial CV'
   # nested-CV
-  discrete.HUBER.two.nested <- cost.fit$SL.predict$`two-stage discrete learner`$'Huber-nested CV'
+  discrete.HUBER.two.nested <- meps.fit$SL.predict$`two-stage discrete learner`$'Huber-nested CV'
   
   # Super Learner (MSE vs. HUBER)
-  SL.LS.two <- cost.fit$SL.predict$`two-stage super learner`$'Standard (MSE)'
+  SL.LS.two <- meps.fit$SL.predict$`two-stage super learner`$'Standard (MSE)'
   # partial-CV
-  SL.HUBER.two.partial <- cost.fit$SL.predict$`two-stage super learner`$'Huber-partial CV'
+  SL.HUBER.two.partial <- meps.fit$SL.predict$`two-stage super learner`$'Huber-partial CV'
   # nested-CV
-  SL.HUBER.two.nested <- cost.fit$SL.predict$`two-stage super learner`$'Huber-nested CV'
+  SL.HUBER.two.nested <- meps.fit$SL.predict$`two-stage super learner`$'Huber-nested CV'
   
   # One-stage
   # Discrete learner (MSE vs. HUBER)
-  discrete.LS.one <- cost.fit$SL.predict$`one-stage discrete learner`$'Standard (MSE)'
+  discrete.LS.one <- meps.fit$SL.predict$`one-stage discrete learner`$'Standard (MSE)'
   # partial-CV
-  discrete.HUBER.one.partial <- cost.fit$SL.predict$`one-stage discrete learner`$'Huber-partial CV'
+  discrete.HUBER.one.partial <- meps.fit$SL.predict$`one-stage discrete learner`$'Huber-partial CV'
   # nested-CV
-  discrete.HUBER.one.nested <- cost.fit$SL.predict$`one-stage discrete learner`$'Huber-nested CV'
+  discrete.HUBER.one.nested <- meps.fit$SL.predict$`one-stage discrete learner`$'Huber-nested CV'
   
   # Super Learner (MSE vs. HUBER)
-  SL.LS.one <- cost.fit$SL.predict$`one-stage super learner`$'Standard (MSE)'
+  SL.LS.one <- meps.fit$SL.predict$`one-stage super learner`$'Standard (MSE)'
   # partial-CV
-  SL.HUBER.one.partial <- cost.fit$SL.predict$`one-stage super learner`$'Huber-partial CV'
+  SL.HUBER.one.partial <- meps.fit$SL.predict$`one-stage super learner`$'Huber-partial CV'
   # nested-CV
-  SL.HUBER.one.nested <- cost.fit$SL.predict$`one-stage super learner`$'Huber-nested CV'
+  SL.HUBER.one.nested <- meps.fit$SL.predict$`one-stage super learner`$'Huber-nested CV'
 
 
 ###################################################################################
@@ -142,16 +142,11 @@ twostage.fit <- HuberSL(Y = train$TOTEXP,
   Rsq <- c(zero_train, zero_test, prop_train, prop_test, Rsq)
   
   # save output
-  save(mse, file=paste0("/projects/dbenkes/ziyue/topic_2/MEPS/MSE_n=",parameter_grid$sample_size[iter],
-                        "_skew=",parameter_grid$skew[iter],
-                        "_seed=", parameter_grid$seed[iter],".RData"))
+  save(mse, file=paste0("/projects/dbenkes/ziyue/topic_2/MEPS/MSE.RData"))
   
-  save(mae, file=paste0("/projects/dbenkes/ziyue/topic_2/MEPS/MAE_n=",parameter_grid$sample_size[iter],
-                        "_skew=",parameter_grid$skew[iter],
-                        "_seed=", parameter_grid$seed[iter],".RData"))
-  save(Rsq, file=paste0("/projects/dbenkes/ziyue/topic_2/MEPS/Rsq_n=",parameter_grid$sample_size[iter],
-                        "_skew=",parameter_grid$skew[iter],
-                        "_seed=", parameter_grid$seed[iter],".RData"))
+  save(mae, file=paste0("/projects/dbenkes/ziyue/topic_2/MEPS/MAE.RData"))
+
+  save(Rsq, file=paste0("/projects/dbenkes/ziyue/topic_2/MEPS/Rsq.RData"))
 
 
 
