@@ -62,7 +62,7 @@ parameter_grid <- expand.grid(
   # fit two-stage superlearner with different loss function (MSE vs. HUBER)
   cost.fit <- HuberSL(Y = train$y, X = train[,-c(1,12)], newX = test[,-c(1,12)], 
                           library.2stage =list(stage1=c("SL.glm","SL.knn","SL.randomForest","SL.glmnet"),
-                                               stage2=c("SL.gammaLogGLM","SL.glmnet","SL.lm","SL.randomForest")),
+                                               stage2=c("SL.gammaLogGLM","SL.glmnet","SL.logOLS.smear","SL.randomForest")),
                           library.1stage = c("SL.lm","SL.glmnet","SL.svm","SL.randomForest"),
                           lambda = lam,
                           cvControl = list(V = 10))
