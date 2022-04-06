@@ -21,7 +21,8 @@ library(nloptr)
 library(spaMM)
 
 # source functions 
-source("/projects/dbenkes/ziyue/topic_2/MEPS/meps_code.R")
+source("/projects/dbenkes/ziyue/topic_2/MEPS/SL_estimators.R")
+source("/projects/dbenkes/ziyue/topic_2/MEPS/HuberSL.R")
 
 # Loading MEPS train_data
 train <- get(load(paste0("/projects/dbenkes/ziyue/topic_2/MEPS/train.RData")))
@@ -54,9 +55,9 @@ prop_test <- mean(test$TOTEXP >= quantile(test$TOTEXP,probs = c(0.75)) +
 twostage.fit <- HuberSL(Y = train$TOTEXP, 
                         X = train[,-c(1,21)], 
                         newX = test[,-c(1,21)],
-                        library.2stage = list(stage1=c("SL.glm","SL.glmnet","SL.knn","SL.rpart"),
-                                              stage2=c("SL.logOLS.smear", "SL.gammaIdentityGLM","SL.glmnet","SL.rf.caret1")),
-                        library.1stage = c("SL.lm", "SL.glmnet", "SL.rf.caret1"),
+                        library.2stage = list(stage1=c("SL.glm","SL.glmnet","SL.knn", "SL.rf.caret1"),
+                                              stage2=c("SL.logOLS.smear", "SL.gammaLogGLM","SL.glmnet", "SL.rf.caret1")),
+                        library.1stage = c("SL.lm", "SL.glmnet", "SL.svm", "SL.rf.caret1"),
                         lambda = lam,
                         cvControl = list(V = 10))
 
