@@ -19,12 +19,12 @@ echo "#!/bin/bash" >> script.out
 echo "#SBATCH --partition=short-cpu" >> script.out
 echo "#SBATCH --job-name=ate_${i}" >> script.out
 echo "#SBATCH --mem=16G" >> script.out
-echo "#SBATCH --error=${path_read}err/1000_${i}.err" >> script.out
-echo "#SBATCH --output=${path_read}out/1000_${i}.out" >> script.out
-echo "#SBATCH --mail-user=zwu56@emory.edu." >> script.out
+echo "#SBATCH --error=${path_read}err/ate_${i}.err" >> script.out
+echo "#SBATCH --output=${path_read}out/ate_${i}.out" >> script.out
+echo "#SBATCH --mail-user=zwu56@emory.edu" >> script.out
 echo "module purge" >> script.out
 echo "module load R/4.0.3" >> script.out
-echo "R CMD BATCH \"--args i=${i}\" ${path_read}sim.R" >> script.out
+echo "R CMD BATCH \"--args i=${i}\" ${path_read}simulation.R" >> script.out
 
 chmod +x script.out
 sbatch ./script.out
