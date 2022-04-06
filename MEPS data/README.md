@@ -1,7 +1,7 @@
 __README for MEPS data analysis__
 
 # Overview 
-In this folder we includes codes for conducting real data analysis with data from the Medical Expenditure Panel Survey (MEPS).
+In this folder we include codes for conducting real data analysis with data from the Medical Expenditure Panel Survey (MEPS).
 MEPS is a national survey on the financing and use of medical care of families and individuals, 
 their medical providers, and employers across the United States. We used the longitudinal data of MEPS 2016-2017, with 2016 MEPS used as a 
 training sample and the same individuals in 2017 MEPS used as a testing sample. We developed a prediction model for total annual healthcare expenditures based on demographics, medical conditions, and insurance characteristics.
