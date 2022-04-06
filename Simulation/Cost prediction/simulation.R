@@ -27,9 +27,9 @@ parameter_grid <- expand.grid(
   library(glmnet)
   
   # source in functions 
-  source("/projects/dbenkes/ziyue/topic_2/cost_prediction/createData.R")
-  source("/projects/dbenkes/ziyue/topic_2/cost_prediction/Estimators.R")
-  source("/projects/dbenkes/ziyue/topic_2/cost_prediction/twostage.HuberSL.R")
+  source("/projects/dbenkes/ziyue/topic_2/cost/createData.R")
+  source("/projects/dbenkes/ziyue/topic_2/cost/Estimators.R")
+  source("/projects/dbenkes/ziyue/topic_2/cost/HuberSL.R")
 
   # create candidate values for robustification parameter lambda
   lam <- c(0.00001, 0.000025, 0.00005, 0.000075, 0.0001, 0.00025, 0.0005, 0.00075, 0.001, 
@@ -39,7 +39,7 @@ parameter_grid <- expand.grid(
   lamname <- paste('lambda =',10000*lam)
   
   # do your simulation for row iter of parameter_grid
-  # make training & testing data based on parameter_grid[iter, ]
+  # make training & testing data based on parameter_grid[iter,]
   train <- createData(n = parameter_grid$sample_size[iter],
                       skew = parameter_grid$skew[iter]
   )
@@ -48,132 +48,111 @@ parameter_grid <- expand.grid(
                      skew = parameter_grid$skew[iter]
   )
   
+  # zero percentage
+  zero_train <- (sum(train$y==0) / dim(train)[1]) * 100
+  zero_test <- (sum(test$y==0) / dim(test)[1]) * 100
 
+  # outlier proportion
   prop_train <- mean(train$y >= quantile(train$y,probs = c(0.75)) + 
                        1.5*(quantile(train$y,probs = c(0.75))-quantile(train$y,probs = c(0.25))))*100
   
   prop_test <- mean(test$y >= quantile(test$y,probs = c(0.75)) + 
                       1.5*(quantile(test$y,probs = c(0.75))-quantile(test$y,probs = c(0.25))))*100
   
-  # fit two-stage superlearner with different loss function    
-  twostage.fit <- twostageSL.HUBER3(Y = train$y, X = train[,-c(1,12)], newX = test[,-c(1,12)],
-                                    library.2stage =list(stage1=c("SL.glm","SL.knn","SL.randomForest","SL.glmnet"),
-                                                         stage2=c("SL.gammaIdentityGLM","SL.glmnet","SL.lm",
-                                                                  "SL.randomForest")),
-                                    library.1stage = c("SL.lm","SL.glmnet","SL.svm","SL.randomForest"),
-                                    lambda = lam,
-                                    cvControl = list(V = 10))
+  # fit two-stage superlearner with different loss function (MSE vs. HUBER)
+  cost.fit <- HuberSL(Y = train$y, X = train[,-c(1,12)], newX = test[,-c(1,12)], 
+                          library.2stage =list(stage1=c("SL.glm","SL.knn","SL.randomForest","SL.glmnet"),
+                                               stage2=c("SL.gammaLogGLM","SL.glmnet","SL.lm","SL.randomForest")),
+                          library.1stage = c("SL.lm","SL.glmnet","SL.svm","SL.randomForest"),
+                          lambda = lam,
+                          cvControl = list(V = 10))
   
+  ## Obtain predictions
   # Two-stage
-  # Discrete prediction (LS vs. optimal HUBER)
-  discrete.LS.two <- twostage.fit$discrete.predict$twostage$`Square Loss`
-  # Fake
-  discrete.HUBER.two.fake <- twostage.fit$discrete.predict$twostage$`Huber Loss-optimal lambda`$fake
-  # True
-  discrete.HUBER.two.true <- twostage.fit$discrete.predict$twostage$`Huber Loss-optimal lambda`$true
+  # Discrete learner (MSE vs. HUBER)
+  discrete.LS.two <- cost.fit$SL.predict$`two-stage discrete learner`$'Standard (MSE)'
+  # partial-CV
+  discrete.HUBER.two.partial <- cost.fit$SL.predict$`two-stage discrete learner`$'Huber-partial CV'
+  # nested-CV
+  discrete.HUBER.two.nested <- cost.fit$SL.predict$`two-stage discrete learner`$'Huber-nested CV'
   
-  # SL prediction (LS vs. optimal HUBER)
-  SL.LS.two <- twostage.fit$SL.predict$twostage$`Square Loss`
-  # Fake
-  SL.HUBER.two.fake <- twostage.fit$SL.predict$twostage$`Huber Loss-optimal lambda`$fake
-  # True
-  SL.HUBER.two.true <- twostage.fit$SL.predict$twostage$`Huber Loss-optimal lambda`$true
+  # Super Learner (MSE vs. HUBER)
+  SL.LS.two <- cost.fit$SL.predict$`two-stage super learner`$'Standard (MSE)'
+  # partial-CV
+  SL.HUBER.two.partial <- cost.fit$SL.predict$`two-stage super learner`$'Huber-partial CV'
+  # nested-CV
+  SL.HUBER.two.nested <- cost.fit$SL.predict$`two-stage super learner`$'Huber-nested CV'
   
   # One-stage
-  # Discrete prediction (LS vs. optimal HUBER)
-  discrete.LS.one <- twostage.fit$discrete.predict$onestage$`Square Loss`
-  # Fake
-  discrete.HUBER.one.fake <- twostage.fit$discrete.predict$onestage$`Huber Loss-optimal lambda`$fake
-  # True
-  discrete.HUBER.one.true <- twostage.fit$discrete.predict$onestage$`Huber Loss-optimal lambda`$true
+  # Discrete learner (MSE vs. HUBER)
+  discrete.LS.one <- cost.fit$SL.predict$`one-stage discrete learner`$'Standard (MSE)'
+  # partial-CV
+  discrete.HUBER.one.partial <- cost.fit$SL.predict$`one-stage discrete learner`$'Huber-partial CV'
+  # nested-CV
+  discrete.HUBER.one.nested <- cost.fit$SL.predict$`one-stage discrete learner`$'Huber-nested CV'
   
-  # SL prediction (LS vs. optimal HUBER)
-  SL.LS.one <- twostage.fit$SL.predict$onestage$`Square Loss`
-  # Fake
-  SL.HUBER.one.fake <- twostage.fit$SL.predict$onestage$`Huber Loss-optimal lambda`$fake
-  # True
-  SL.HUBER.one.true <- twostage.fit$SL.predict$onestage$`Huber Loss-optimal lambda`$true
+  # Super Learner (MSE vs. HUBER)
+  SL.LS.one <- cost.fit$SL.predict$`one-stage super learner`$'Standard (MSE)'
+  # partial-CV
+  SL.HUBER.one.partial <- cost.fit$SL.predict$`one-stage super learner`$'Huber-partial CV'
+  # nested-CV
+  SL.HUBER.one.nested <- cost.fit$SL.predict$`one-stage super learner`$'Huber-nested CV'
   
-  ## get prediction performance (LS vs. optimal HUBER)
+
+
+
+  ## get performance evaluation (MSE vs. HUBER)
   # MSE
   mse <- c(mean((test$y - discrete.LS.two)^2),
-           mean((test$y - discrete.HUBER.two.fake)^2),
-           mean((test$y - discrete.HUBER.two.true)^2),
+           mean((test$y - discrete.HUBER.two.partial)^2),
+           mean((test$y - discrete.HUBER.two.nested)^2),
            
            mean((test$y - SL.LS.two)^2),
-           mean((test$y - SL.HUBER.two.fake)^2),
-           mean((test$y - SL.HUBER.two.true)^2),
+           mean((test$y - SL.HUBER.two.partial)^2),
+           mean((test$y - SL.HUBER.two.nested)^2),
            
            mean((test$y - discrete.LS.one)^2),
-           mean((test$y - discrete.HUBER.one.fake)^2),
-           mean((test$y - discrete.HUBER.one.true)^2),
+           mean((test$y - discrete.HUBER.one.partial)^2),
+           mean((test$y - discrete.HUBER.one.nested)^2),
            
            mean((test$y - SL.LS.one)^2),
-           mean((test$y - SL.HUBER.one.fake)^2),
-           mean((test$y - SL.HUBER.one.true)^2))
+           mean((test$y - SL.HUBER.one.partial)^2),
+           mean((test$y - SL.HUBER.one.nested)^2))
   
+  # MAE
+  mAe <- c(mean(abs(test$y - discrete.LS.two)),
+           mean(abs(test$y - discrete.HUBER.two.partial)),
+           mean(abs(test$y - discrete.HUBER.two.nested)),
+           
+           mean(abs(test$y - SL.LS.two)),
+           mean(abs(test$y - SL.HUBER.two.partial)),
+           mean(abs(test$y - SL.HUBER.two.nested)),
+           
+           mean(abs(test$y - discrete.LS.one)),
+           mean(abs(test$y - discrete.HUBER.one.partial)),
+           mean(abs(test$y - discrete.HUBER.one.nested)),
+           
+           mean(abs(test$y - SL.LS.one)),
+           mean(abs(test$y - SL.HUBER.one.partial)),
+           mean(abs(test$y - SL.HUBER.one.nested))
+         )
   # R sqaure
-  Rsq <-  1 - mse/(2*var(test$y))
+  Rsq <-  1 - mse/(var(test$y))
+
   
-  mse <- c(mse,prop_train,prop_test)
-  Rsq <- c(Rsq,prop_train,prop_test)
-  
-  ## generate optimal lambda for Huber Loss from training
-  # two discrete
-  optimal.lambda.two.discrete.fake <- twostage.fit$huber.optimal.lambda$twostage$`Discrete Learner`$fake
-  optimal.lambda.two.discrete.true <- twostage.fit$huber.optimal.lambda$twostage$`Discrete Learner`$true
-  # two SL
-  optimal.lambda.two.SL.fake <- twostage.fit$huber.optimal.lambda$twostage$SuperLearner$fake
-  optimal.lambda.two.SL.true <- twostage.fit$huber.optimal.lambda$twostage$SuperLearner$true
-  # one discrete
-  optimal.lambda.one.discrete.fake <- twostage.fit$huber.optimal.lambda$onestage$`Discrete Learner`$fake
-  optimal.lambda.one.discrete.true <- twostage.fit$huber.optimal.lambda$onestage$`Discrete Learner`$true
-  # one SL
-  optimal.lambda.one.SL.fake <- twostage.fit$huber.optimal.lambda$onestage$SuperLearner$fake
-  optimal.lambda.one.SL.true <- twostage.fit$huber.optimal.lambda$onestage$SuperLearner$true
-  
-  mse <- c(mse,optimal.lambda.two.discrete.fake,optimal.lambda.two.discrete.true,
-           optimal.lambda.two.SL.fake,optimal.lambda.two.SL.true,
-           optimal.lambda.one.discrete.fake,optimal.lambda.one.discrete.true,
-           optimal.lambda.one.SL.fake,optimal.lambda.one.SL.true)
-  
-  Rsq <- c(Rsq,optimal.lambda.two.discrete.fake,optimal.lambda.two.discrete.true,
-           optimal.lambda.two.SL.fake,optimal.lambda.two.SL.true,
-           optimal.lambda.one.discrete.fake,optimal.lambda.one.discrete.true,
-           optimal.lambda.one.SL.fake,optimal.lambda.one.SL.true)
-  
-  ## generate optimal lambda for Huber Loss from testing
-  two.discrete <- apply(twostage.fit$discrete.predict$twostage$`Huber Loss`, 2, function(x) mean((x-test$y)^2))
-  test.two.discrete <- lamname[which.min(two.discrete)]
-  two.SL <- apply(twostage.fit$SL.predict$twostage$`Huber Loss`, 2, function(x) mean((x-test$y)^2))
-  test.two.SL <- lamname[which.min(two.SL)]
-  one.discrete <- apply(twostage.fit$discrete.predict$onestage$`Huber Loss`, 2, function(x) mean((x-test$y)^2))
-  test.one.discrete <- lamname[which.min(one.discrete)]
-  one.SL <- apply(twostage.fit$SL.predict$onestage$`Huber Loss`, 2, function(x) mean((x-test$y)^2))
-  test.one.SL <- lamname[which.min(one.SL)]
-  
-  mse <- c(mse,test.two.discrete,test.two.SL,test.one.discrete,test.one.SL)
-  Rsq <- c(Rsq,test.two.discrete,test.two.SL,test.one.discrete,test.one.SL)
-  
-  ## generate MSE for optimal lambda for Huber Loss from testing
-  mse.test.two.discrete <- as.numeric(two.discrete[which.min(two.discrete)])
-  mse.test.two.SL <- as.numeric(two.SL[which.min(two.SL)])
-  mse.test.one.discrete <- as.numeric(one.discrete[which.min(one.discrete)])
-  mse.test.one.SL <- as.numeric(one.SL[which.min(one.SL)])
-  
-  Rsq.test.two.discrete <- 1 - mse.test.two.discrete/(2*var(test$y))
-  Rsq.test.two.SL <- 1 - mse.test.two.SL/(2*var(test$y))
-  Rsq.test.one.discrete <- 1 - mse.test.one.discrete/(2*var(test$y))
-  Rsq.test.one.SL <- 1 - mse.test.one.SL/(2*var(test$y))
-  
-  mse <- c(mse,mse.test.two.discrete,mse.test.two.SL,mse.test.one.discrete,mse.test.one.SL)
-  Rsq <- c(Rsq,Rsq.test.two.discrete,Rsq.test.two.SL,Rsq.test.one.discrete,Rsq.test.one.SL)
-  
+  mse <- c(zero_train, zero_test, prop_train, prop_test, mse)
+  mae <- c(zero_train, zero_test, prop_train, prop_test, mae)
+  Rsq <- c(zero_train, zero_test, prop_train, prop_test, Rsq)
+
   # save output
-  save(mse, file=paste0("/Users/ziyuewu//Desktop/project 2/simulation_2/MSE_n=",parameter_grid$sample_size[iter],
+  save(mse, file=paste0("/projects/dbenkes/ziyue/topic_2/cost/results/MSE_n=",parameter_grid$sample_size[iter],
                         "_skew=",parameter_grid$skew[iter],
                         "_seed=", parameter_grid$seed[iter],".RData"))
   
-  save(Rsq, file=paste0("/Users/ziyuewu//Desktop/project 2/simulation_2/Rsq_n=",parameter_grid$sample_size[iter],
+  save(mae, file=paste0("/projects/dbenkes/ziyue/topic_2/cost/results/MAE_n=",parameter_grid$sample_size[iter],
+                        "_skew=",parameter_grid$skew[iter],
+                        "_seed=", parameter_grid$seed[iter],".RData"))
+
+  save(Rsq, file=paste0("/projects/dbenkes/ziyue/topic_2/ate/results/Rsq_n=",parameter_grid$sample_size[iter],
                         "_skew=",parameter_grid$skew[iter],
                         "_seed=", parameter_grid$seed[iter],".RData"))
