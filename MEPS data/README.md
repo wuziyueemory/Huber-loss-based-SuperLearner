@@ -16,5 +16,5 @@ systems. To read more about this work flow see
 This folder includes the training dataset `train.RData` which contains data from MEPS 2016,
 testing dataset `test.RData` which contains data from MEPS 2017, R script for MEPS 
 data analysis `meps.R`, functions for Huber loss-based super learner `HuberSL.R`, functions 
-for candidate estimators `SL_estimators.R` and shell script for executing MEPS data analysis 
+for candidate algorithms in super learner library `SL_estimators.R` and shell script for executing MEPS data analysis 
 R scripts `meps.sh`.
