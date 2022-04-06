@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "#SBATCH --mail-user=zwu56@emory.edu." >> script.out
+echo "#SBATCH --mail-user=zwu56@emory.edu" >> script.out
 echo "#SBATCH --partition=short-cpu" >> script.out
 echo "#SBATCH --job-name=merge" >> script.out
 echo "#SBATCH --output=/projects/dbenkes/ziyue/topic_2/ate/merge.out" >> script.out
