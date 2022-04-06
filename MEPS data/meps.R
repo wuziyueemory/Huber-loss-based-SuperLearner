@@ -55,9 +55,9 @@ prop_test <- mean(test$TOTEXP >= quantile(test$TOTEXP,probs = c(0.75)) +
 twostage.fit <- HuberSL(Y = train$TOTEXP, 
                         X = train[,-c(1,21)], 
                         newX = test[,-c(1,21)],
-                        library.2stage = list(stage1=c("SL.glm","SL.glmnet","SL.knn", "SL.rf.caret1"),
-                                              stage2=c("SL.logOLS.smear", "SL.gammaLogGLM","SL.glmnet", "SL.rf.caret1")),
-                        library.1stage = c("SL.lm", "SL.glmnet", "SL.svm", "SL.rf.caret1"),
+                        library.2stage = list(stage1=c("SL.glm","SL.glmnet","SL.knn", "SL.randomForest"),
+                                              stage2=c("SL.logOLS.smear", "SL.gammaLogGLM","SL.glmnet", "SL.randomForest")),
+                        library.1stage = c("SL.lm", "SL.glmnet", "SL.svm", "SL.randomForest"),
                         lambda = lam,
                         cvControl = list(V = 10))
 
